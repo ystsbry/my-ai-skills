@@ -14,7 +14,8 @@ description: プラグインの動作確認用サンプルスキル。「hello�
 /ybaba:hello
 
 # OpenAI Codex CLI
-$hello
+$ybaba:hello        # marketplace 経由のプラグイン
+$hello              # ~/.agents/skills/ fallback 導入時
 ```
 
 ## 手順

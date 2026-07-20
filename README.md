@@ -18,7 +18,7 @@ plugin/
 | ランタイム | インストール先 | 呼び出し |
 | --- | --- | --- |
 | Claude Code | `~/.claude/skills/ybaba`（skills-dir plugin として自動ロード） | `/ybaba:<skill-name>` |
-| OpenAI Codex CLI | プラグイン（marketplace 経由）or `~/.agents/skills/`（fallback） | `$<skill-name>` |
+| OpenAI Codex CLI | プラグイン（marketplace 経由）or `~/.agents/skills/`（fallback） | `$ybaba:<skill-name>`（fallback 導入時は `$<skill-name>`） |
 
 ## インストール
 
@@ -36,6 +36,9 @@ make uninstall-codex
 > **Codex の注意点**
 > - marketplace 経由では Codex がプラグインを `~/.codex/plugins/cache/` に**コピー**する
 >   （symlink ではない）ため、SKILL.md を編集したら再インストールが必要。
+> - プラグイン経由のスキルはプラグイン名で名前空間修飾される（`ybaba:<skill-name>`）。
+>   明示呼び出しは `$ybaba:<skill-name>`。fallback（`~/.agents/skills/`）導入時は
+>   フラット名 `$<skill-name>` になる。
 > - plugin 未対応の codex バージョン向け fallback として `make install-codex-skills` /
 >   `make uninstall-codex-skills` も用意している（`~/.agents/skills/` へのディレクトリ
 >   symlink。ファイル単位の symlink は loader に落とされる: openai/codex#15756。
