@@ -1,0 +1,7 @@
+{
+  "name": "ybaba",
+  "version": "0.1.0",
+  "description": "ybaba's personal AI skills for Claude Code / Codex.",
+  "author": { "name": "ystsbry" },
+  "skills": "./skills/"
+}

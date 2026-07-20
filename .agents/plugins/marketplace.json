@@ -1,0 +1,11 @@
+{
+  "name": "ybaba",
+  "description": "ybaba の自分用スキル群を Codex プラグインとして配布するローカルマーケットプレース。",
+  "plugins": [
+    {
+      "name": "ybaba",
+      "description": "ybaba の自分用 AI スキルを提供するプラグイン。",
+      "source": { "source": "local", "path": "./plugin" }
+    }
+  ]
+}
