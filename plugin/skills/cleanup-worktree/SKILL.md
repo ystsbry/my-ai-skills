@@ -105,13 +105,13 @@ ext4 は通常 `relatime` でマウントされており、atime の更新は「
 
 ## ステップ3: チェックリストを提示する
 
-収集結果を**削除しやすい順**（PR merged かつ変更なし → 判断が必要なもの → 危険なもの）に並べ、以下のファイルに書き出す：
+収集結果を**削除しやすい順**（PR merged かつ変更なし → 判断が必要なもの → 危険なもの）に並べ、**worktree ルートの直下**に書き出す：
 
 ```
-~/.claude-utils/session/worktree-cleanup/checklist.md
+${GHQ_WORKTREE_ROOT:-$(ghq root)-worktrees}/.cleanup-checklist.md
 ```
 
-（ディレクトリがなければ作成する。実行のたびに上書きしてよい）
+対象の worktree 群と同じ場所に置くことで、`--all` でリポジトリを横断しても1ファイルに収まる。実行のたびに上書きしてよい。
 
 ```markdown
 # worktree 削除候補
