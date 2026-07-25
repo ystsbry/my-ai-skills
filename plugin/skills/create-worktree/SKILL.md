@@ -226,6 +226,6 @@ worktree を作成しました: <パス>（<ブランチ名> ← origin/<デフ�
 - **破壊的な操作をしない**: 既存の worktree・ブランチ・ディレクトリを、ユーザーの明示的な承認なしに削除しない。`git worktree remove --force` や `git branch -D` は使わない
 - **本体の作業ツリーに触らない**: 本体のブランチ切り替え、stash、`git reset` は行わない。ローカルのデフォルトブランチの fast-forward だけは、ユーザーが望みかつクリーンな場合に限り許容する
 - **fetch を省略しない**: 「最新化してからブランチを切る」がこのスキルの主目的。fetch に失敗したら止める
-- **後片付けの案内**: 作業完了後は本体側で `git worktree remove <パス>` → 必要なら `git branch -d <ブランチ>`。手動でディレクトリを消してしまった場合は `git worktree prune` で管理情報を掃除する
+- **後片付けの案内**: 作業完了後は cleanup-worktree スキルで棚卸しして削除する。手動でやる場合は本体側で `git worktree remove <パス>` → 必要なら `git branch -d <ブランチ>`（ブランチ削除は worktree 削除の**後**でないと `used by worktree` で失敗する）。ディレクトリを手で消してしまった場合は `git worktree prune` で管理情報を掃除する
 - **docker compose を使うリポジトリ**: プロジェクト名（デフォルトはディレクトリ名）が worktree ごとに変わるためコンテナは分離されるが、**ホスト側のポートは衝突する**。同時起動するなら `COMPOSE_PROJECT_NAME` とポートの調整が必要な旨を伝える
 - **dev サーバーのポート衝突**: 複数 worktree で同時に開発サーバーを立てる場合も同様。必要なら別ポートを案内する
