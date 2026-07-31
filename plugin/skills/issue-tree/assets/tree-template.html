@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --ink: #1f2430; --muted: #6b7280;
+    --line: #e3e6ea; --accent: #3b5bdb; --sel: #eef2ff;
+    --t-fact: #2563eb; --t-dev: #0d9488; --t-po: #7c3aed; --t-trade: #d97706; --t-plan: #64748b;
+    --s-todo: #9ca3af; --s-doing: #2563eb; --s-ready: #d97706; --s-done: #16a34a;
+    --warn-bg: #fef3c7; --warn-ink: #92400e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161c; --panel: #1d212b; --ink: #e6e9ef; --muted: #9aa3b2;
+      --line: #303645; --accent: #7b96ff; --sel: #262e45;
+      --t-fact: #6ea0ff; --t-dev: #3fc1b0; --t-po: #b08cff; --t-trade: #f0a94a; --t-plan: #94a3b8;
+      --s-todo: #6b7280; --s-doing: #6ea0ff; --s-ready: #f0a94a; --s-done: #4ade80;
+      --warn-bg: #3a2f14; --warn-ink: #fbd38d;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", Meiryo, system-ui, sans-serif;
+    background: var(--bg); color: var(--ink); font-size: 14px; line-height: 1.65;
+    display: flex; flex-direction: column;
+  }
+  header {
+    padding: 14px 20px 10px; border-bottom: 1px solid var(--line); background: var(--panel);
+    flex: none;
+  }
+  header h1 { margin: 0 0 2px; font-size: 16px; }
+  header .core-q { margin: 0; color: var(--muted); font-size: 13px; }
+  header .core-q strong { color: var(--ink); font-weight: 600; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 10px; }
+  .toolbar .spacer { flex: 1; }
+  .chip, .btn {
+    border: 1px solid var(--line); background: transparent; color: var(--ink);
+    border-radius: 999px; padding: 2px 10px; font-size: 12px; cursor: pointer; line-height: 1.6;
+  }
+  .btn:hover, .chip:hover { border-color: var(--accent); }
+  .chip { display: inline-flex; align-items: center; gap: 5px; }
+  .chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--muted)); }
+  .chip.off { opacity: .35; }
+  main { flex: 1; display: flex; min-height: 0; }
+  #treePane { flex: 1 1 55%; overflow: auto; padding: 14px 8px 40px 14px; min-width: 0; }
+  #splitter { flex: none; width: 6px; cursor: col-resize; background: transparent; touch-action: none; }
+  #splitter:hover, #splitter.dragging { background: var(--accent); opacity: .4; }
+  #detailPane {
+    flex: 1 1 45%; overflow: auto; border-left: 1px solid var(--line);
+    background: var(--panel); padding: 18px 20px 40px; min-width: 0;
+  }
+  .search {
+    border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+    border-radius: 999px; padding: 2px 12px; font-size: 12px; line-height: 1.8; width: 180px;
+  }
+  .search:focus { outline: none; border-color: var(--accent); }
+  /* tree */
+  ul.tree, ul.tree ul { list-style: none; margin: 0; padding-left: 22px; position: relative; }
+  ul.tree { padding-left: 0; }
+  ul.tree ul::before {
+    content: ""; position: absolute; left: 8px; top: 0; bottom: 10px; border-left: 1px solid var(--line);
+  }
+  li.node-li { margin: 4px 0; position: relative; }
+  ul.tree ul li.node-li::before {
+    content: ""; position: absolute; left: -14px; top: 15px; width: 12px; border-top: 1px solid var(--line);
+  }
+  .node-row { display: flex; align-items: flex-start; gap: 4px; }
+  .twisty {
+    flex: none; width: 18px; height: 18px; margin-top: 6px; border: none; background: none;
+    color: var(--muted); cursor: pointer; font-size: 10px; padding: 0;
+  }
+  .twisty.leaf { visibility: hidden; }
+  .card {
+    display: inline-flex; align-items: center; gap: 7px; flex-wrap: wrap;
+    border: 1px solid var(--line); background: var(--panel); border-radius: 8px;
+    padding: 5px 10px; cursor: pointer; max-width: 100%;
+  }
+  .card:hover { border-color: var(--accent); }
+  .card.selected { background: var(--sel); border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .card.dim { opacity: .3; }
+  .badge {
+    flex: none; font-size: 11px; font-weight: 600; color: #fff; border-radius: 4px; padding: 0 6px;
+    background: var(--c, var(--muted));
+  }
+  @media (prefers-color-scheme: dark) { .badge { color: #14161c; } }
+  .card .title { font-weight: 500; }
+  .card .count { flex: none; font-size: 11px; color: var(--muted); }
+  .status { flex: none; display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); }
+  .status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--muted)); }
+  .card.root { border-width: 2px; border-color: var(--accent); font-weight: 600; padding: 8px 14px; }
+  .axis-label { margin: 6px 0 0 22px; font-size: 11px; color: var(--muted); }
+  /* detail */
+  #detailPane h2 { margin: 0 0 4px; font-size: 15px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  #detailPane h3 { margin: 18px 0 6px; font-size: 12px; color: var(--muted); letter-spacing: .05em; }
+  #detailPane .question { font-size: 14px; font-weight: 600; margin: 8px 0; }
+  #detailPane p, #detailPane li { font-size: 13px; }
+  #detailPane ul { margin: 4px 0; padding-left: 20px; }
+  .meta { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 12px; margin-top: 6px; }
+  .evi { border-left: 3px solid var(--line); padding: 2px 10px; margin: 6px 0; }
+  .evi .src { color: var(--muted); font-size: 12px; font-family: ui-monospace, "Cascadia Mono", monospace; }
+  .evi.unverified { border-left-color: var(--s-ready); background: var(--warn-bg); color: var(--warn-ink); border-radius: 0 6px 6px 0; }
+  .evi.unverified .src { color: inherit; opacity: .8; }
+  .decision-box { border-left: 3px solid var(--s-done); padding: 4px 10px; margin: 6px 0; }
+  .decision-box .choice { font-weight: 600; }
+  .decision-box .src { color: var(--muted); font-size: 12px; }
+  .dep-link {
+    display: inline-block; margin: 2px 6px 2px 0; padding: 2px 10px; border-radius: 999px;
+    border: 1px solid var(--line); background: transparent; color: var(--accent); cursor: pointer; font-size: 12px;
+  }
+  .dep-link:hover { border-color: var(--accent); }
+  .opt-note { color: var(--muted); }
+  table.concept { border-collapse: collapse; width: 100%; margin: 6px 0; font-size: 12.5px; }
+  table.concept th, table.concept td { border: 1px solid var(--line); padding: 5px 8px; text-align: left; vertical-align: top; }
+  table.concept th { background: var(--sel); font-weight: 600; }
+  .summary-line { color: var(--muted); font-size: 12.5px; }
+  .placeholder { color: var(--muted); }
+  @media (max-width: 860px) {
+    main { flex-direction: column; }
+    #splitter { display: none; }
+    #detailPane { flex: 1 1 auto; border-left: none; border-top: 1px solid var(--line); }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="hTheme"></h1>
+  <p class="core-q">中核の問い: <strong id="hCore"></strong></p>
+  <div class="toolbar" id="toolbar">
+    <span class="summary-line" id="hSummary"></span>
+    <span class="spacer" id="chipAnchor"></span>
+    <input class="search" id="searchBox" type="search" placeholder="ノードを検索">
+    <button class="btn" id="btnExpand">すべて展開</button>
+    <button class="btn" id="btnCollapse">すべて畳む</button>
+  </div>
+</header>
+<main>
+  <nav id="treePane" aria-label="イシューツリー"></nav>
+  <div id="splitter"></div>
+  <aside id="detailPane"></aside>
+</main>
+<script>
+"use strict";
+const DATA = __DATA__;
+
+const TYPE_PALETTE = ["var(--t-fact)", "var(--t-dev)", "var(--t-po)", "var(--t-trade)", "var(--t-plan)", "#d1508f", "#7d9b3a"];
+const TYPE_COLORS = (Array.isArray(DATA.types) && DATA.types.length)
+  ? Object.fromEntries(DATA.types.map((t, i) => [t.name, t.color || TYPE_PALETTE[i % TYPE_PALETTE.length]]))
+  : {
+      "事実確認": "var(--t-fact)", "Dev方針": "var(--t-dev)", "PO決定": "var(--t-po)",
+      "トレードオフ": "var(--t-trade)", "実行計画": "var(--t-plan)"
+    };
+const STATUS_COLORS = {
+  "未着手": "var(--s-todo)", "調査中": "var(--s-doing)", "材料揃い": "var(--s-ready)", "決定済み": "var(--s-done)"
+};
+
+const byId = new Map();
+(function index(nodes, parent) {
+  (nodes || []).forEach(n => {
+    n._parent = parent; n._depth = parent ? parent._depth + 1 : 1;
+    byId.set(n.id, n); index(n.children, n);
+  });
+})(DATA.nodes, null);
+
+const el = (tag, cls, text) => {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+};
+
+// ---- header ----
+document.getElementById("hTheme").textContent = DATA.theme || "イシューツリー";
+document.title = DATA.theme || "イシューツリー";
+document.getElementById("hCore").textContent = DATA.coreQuestion || "";
+(function summary() {
+  const counts = {};
+  byId.forEach(n => { counts[n.type] = (counts[n.type] || 0) + 1; });
+  const undecided = [...byId.values()].filter(n => n.status && n.status !== "決定済み").length;
+  document.getElementById("hSummary").textContent =
+    `論点 ${byId.size} 件（未決 ${undecided} 件）`;
+})();
+
+// type filter chips
+const activeTypes = new Set(Object.keys(TYPE_COLORS));
+(function chips() {
+  const bar = document.getElementById("toolbar");
+  const anchor = document.getElementById("chipAnchor");
+  Object.keys(TYPE_COLORS).forEach(t => {
+    const c = el("button", "chip");
+    c.style.setProperty("--c", TYPE_COLORS[t]);
+    c.appendChild(el("span", "dot"));
+    c.appendChild(document.createTextNode(t));
+    c.onclick = () => {
+      if (activeTypes.has(t)) activeTypes.delete(t); else activeTypes.add(t);
+      c.classList.toggle("off", !activeTypes.has(t));
+      applyFilter();
+    };
+    bar.insertBefore(c, anchor);
+  });
+})();
+let query = "";
+function matchesQuery(n) {
+  if (!query) return true;
+  const parts = [
+    n.title, n.question, n.why, n.type, n.status, n.id,
+    ...(n.options || []).flatMap(o => [o.label, o.note]),
+    ...(n.evidence || []).flatMap(ev => [ev.text, ev.source]),
+    n.decision && n.decision.choice, n.decision && n.decision.reason
+  ];
+  return parts.some(t => t && String(t).toLowerCase().includes(query));
+}
+function applyFilter() {
+  const allTypes = activeTypes.size === Object.keys(TYPE_COLORS).length;
+  byId.forEach(n => {
+    const typeOk = allTypes || activeTypes.has(n.type);
+    n._card.classList.toggle("dim", !(typeOk && matchesQuery(n)));
+  });
+}
+document.getElementById("searchBox").oninput = (e) => {
+  query = e.target.value.trim().toLowerCase();
+  if (query) byId.forEach(n => toggle(n, true));
+  applyFilter();
+};
+
+// ---- tree ----
+let selected = null;
+function descCount(n) {
+  return (n.children || []).reduce((c, k) => c + 1 + descCount(k), 0);
+}
+function nodeCard(n, isRoot) {
+  const card = el("div", "card" + (isRoot ? " root" : ""));
+  if (!isRoot) {
+    const b = el("span", "badge", n.type || "?");
+    b.style.setProperty("--c", TYPE_COLORS[n.type] || "var(--muted)");
+    card.appendChild(b);
+  }
+  card.appendChild(el("span", "title", n.title));
+  if (n.children && n.children.length) card.appendChild(el("span", "count", "(" + descCount(n) + ")"));
+  if (n.status) {
+    const s = el("span", "status");
+    s.style.setProperty("--c", STATUS_COLORS[n.status] || "var(--muted)");
+    s.appendChild(el("span", "dot"));
+    s.appendChild(document.createTextNode(n.status));
+    card.appendChild(s);
+  }
+  card.onclick = () => select(n);
+  return card;
+}
+function buildList(nodes) {
+  const ul = el("ul", "tree");
+  nodes.forEach(n => {
+    const li = el("li", "node-li");
+    const row = el("div", "node-row");
+    const tw = el("button", "twisty", "▼");
+    const hasKids = n.children && n.children.length;
+    if (!hasKids) tw.classList.add("leaf");
+    row.appendChild(tw);
+    n._card = nodeCard(n, false);
+    row.appendChild(n._card);
+    li.appendChild(row);
+    if (hasKids) {
+      if (n.axis) li.appendChild(el("div", "axis-label", "└ 「" + n.axis + "」で分解"));
+      const childUl = buildList(n.children);
+      li.appendChild(childUl);
+      n._childUl = childUl; n._twisty = tw;
+      tw.onclick = (e) => { e.stopPropagation(); toggle(n); };
+    }
+    n._li = li;
+    ul.appendChild(li);
+  });
+  return ul;
+}
+function toggle(n, force) {
+  if (!n._childUl) return;
+  const show = force !== undefined ? force : n._childUl.style.display === "none";
+  n._childUl.style.display = show ? "" : "none";
+  n._twisty.textContent = show ? "▼" : "▶";
+  const axis = n._li.querySelector(".axis-label");
+  if (axis) axis.style.display = show ? "" : "none";
+}
+(function renderTree() {
+  const pane = document.getElementById("treePane");
+  const rootRow = el("div", "node-row");
+  rootRow.appendChild(el("button", "twisty leaf", "▼"));
+  const rootCard = el("div", "card root");
+  rootCard.appendChild(el("span", "title", DATA.coreQuestion || DATA.theme || ""));
+  rootCard.onclick = () => select(null);
+  rootRow.appendChild(rootCard);
+  pane.appendChild(rootRow);
+  DATA._rootCard = rootCard;
+  pane.appendChild(buildList(DATA.nodes || []));
+})();
+document.getElementById("btnExpand").onclick = () => byId.forEach(n => toggle(n, true));
+document.getElementById("btnCollapse").onclick = () => byId.forEach(n => toggle(n, false));
+// 大きなツリーは初期表示を2階層に絞る（それ以深は畳む）
+if (byId.size > 20) byId.forEach(n => { if (n._depth >= 2) toggle(n, false); });
+
+// ---- splitter ----
+(function splitter() {
+  const sp = document.getElementById("splitter");
+  const pane = document.getElementById("detailPane");
+  let dragging = false;
+  sp.onpointerdown = (e) => { dragging = true; sp.classList.add("dragging"); sp.setPointerCapture(e.pointerId); };
+  sp.onpointermove = (e) => {
+    if (!dragging) return;
+    const total = document.body.clientWidth;
+    const w = Math.min(Math.max(total - e.clientX, 280), total - 320);
+    pane.style.flex = "0 0 " + w + "px";
+  };
+  sp.onpointerup = sp.onpointercancel = () => { dragging = false; sp.classList.remove("dragging"); };
+})();
+
+// ---- detail ----
+function section(parent, label) {
+  parent.appendChild(el("h3", null, label));
+}
+function renderOverview() {
+  const d = document.getElementById("detailPane");
+  d.textContent = "";
+  d.appendChild(el("h2", null, "概要"));
+  if (DATA.sources) d.appendChild(el("p", "summary-line", "素材: " + DATA.sources));
+  d.appendChild(el("p", "question", DATA.coreQuestion || ""));
+  if (DATA.concept) {
+    section(d, "中核概念（共通言語）: " + (DATA.concept.name || ""));
+    if (DATA.concept.note) d.appendChild(el("p", null, DATA.concept.note));
+    const t = el("table", "concept");
+    const hr = el("tr");
+    ["区分", "定義", "判別基準"].forEach(h => hr.appendChild(el("th", null, h)));
+    t.appendChild(hr);
+    (DATA.concept.rows || []).forEach(r => {
+      const tr = el("tr");
+      tr.appendChild(el("td", null, r.label || ""));
+      tr.appendChild(el("td", null, r.definition || ""));
+      tr.appendChild(el("td", null, r.criterion || ""));
+      t.appendChild(tr);
+    });
+    d.appendChild(t);
+  }
+  section(d, "使い方");
+  d.appendChild(el("p", "placeholder",
+    "左のツリーでノードをクリックすると、ここに詳細（問い・なぜ論点か・選択肢・判断材料・依存関係）が表示されます。ヘッダーの型チップで表示を絞り込めます。"));
+}
+function select(n) {
+  if (selected && selected._card) selected._card.classList.remove("selected");
+  DATA._rootCard.classList.remove("selected");
+  selected = n;
+  if (!n) { DATA._rootCard.classList.add("selected"); renderOverview(); return; }
+  n._card.classList.add("selected");
+  for (let p = n._parent; p; p = p._parent) toggle(p, true);
+  n._card.scrollIntoView({ block: "nearest" });
+
+  const d = document.getElementById("detailPane");
+  d.textContent = "";
+  const h = el("h2");
+  const b = el("span", "badge", n.type || "?");
+  b.style.setProperty("--c", TYPE_COLORS[n.type] || "var(--muted)");
+  h.appendChild(b);
+  h.appendChild(document.createTextNode(n.title));
+  d.appendChild(h);
+  const meta = el("div", "meta");
+  meta.appendChild(el("span", null, "ID: " + n.id));
+  if (n.decider) meta.appendChild(el("span", null, "決定者: " + n.decider));
+  if (n.status) meta.appendChild(el("span", null, "ステータス: " + n.status));
+  d.appendChild(meta);
+
+  d.appendChild(el("p", "question", n.question || n.title));
+  if (n.decision) {
+    section(d, "決定");
+    const box = el("div", "decision-box");
+    box.appendChild(el("div", "choice", n.decision.choice || ""));
+    if (n.decision.reason) box.appendChild(el("div", null, n.decision.reason));
+    if (n.decision.date) box.appendChild(el("div", "src", n.decision.date));
+    d.appendChild(box);
+  }
+  if (n.why) { section(d, "なぜ論点か"); d.appendChild(el("p", null, n.why)); }
+  if (n.options && n.options.length) {
+    section(d, "選択肢");
+    const ul = el("ul");
+    n.options.forEach(o => {
+      const li = el("li", null, o.label || "");
+      if (o.note) { li.appendChild(document.createTextNode(" — ")); li.appendChild(el("span", "opt-note", o.note)); }
+      ul.appendChild(li);
+    });
+    d.appendChild(ul);
+  }
+  if (n.evidence && n.evidence.length) {
+    section(d, "判断材料");
+    n.evidence.forEach(ev => {
+      const box = el("div", "evi" + (ev.verified === false ? " unverified" : ""));
+      box.appendChild(el("div", null, (ev.verified === false ? "⚠️ " : "") + (ev.text || "")));
+      if (ev.source) box.appendChild(el("div", "src", ev.source));
+      d.appendChild(box);
+    });
+  }
+  if (n.axis && n.children && n.children.length) {
+    section(d, "分解");
+    d.appendChild(el("p", null, "「" + n.axis + "」で " + n.children.length + " 件に分解"));
+  }
+  const depsTo = (n.deps || []).filter(id => byId.has(id));
+  const depsFrom = [...byId.values()].filter(m => (m.deps || []).includes(n.id));
+  if (depsTo.length || depsFrom.length) {
+    section(d, "依存関係");
+    if (depsTo.length) {
+      d.appendChild(el("p", "summary-line", "この論点が前提とするもの:"));
+      depsTo.forEach(id => { const m = byId.get(id); d.appendChild(depLink(m)); });
+    }
+    if (depsFrom.length) {
+      d.appendChild(el("p", "summary-line", "この論点を前提とするもの:"));
+      depsFrom.forEach(m => d.appendChild(depLink(m)));
+    }
+  }
+}
+function depLink(m) {
+  const a = el("button", "dep-link", "【" + (m.type || "?") + "】" + m.title);
+  a.onclick = () => select(m);
+  return a;
+}
+renderOverview();
+</script>
+</body>
+</html>
