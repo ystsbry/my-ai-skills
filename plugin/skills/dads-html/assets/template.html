@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{文書タイトル}}｜{{サイト名・組織名}}</title>
+<meta name="description" content="{{1〜2文の要約}}">
+<!-- DADS:FONTS:BEGIN -->
+<!-- DADS:FONTS:END -->
+<!-- DADS:STYLES:BEGIN -->
+<!-- scripts/build.py がここに DADS の CSS（global + 使ったコンポーネント + document.css）を埋め込む -->
+<!-- DADS:STYLES:END -->
+<style>
+/* 文書固有の追加スタイル。色・サイズは var(--color-…) と DADS のテキストスタイルの数値だけを使う */
+</style>
+</head>
+<body>
+
+<a class="doc-skip-link dads-link" href="#main">本文へ移動</a>
+
+<header class="doc-header">
+  <div class="doc-container doc-header__inner">
+    <p class="doc-header__title">{{サイト名・組織名}}</p>
+    <!-- 任意: ヘッダー内リンク
+    <ul class="doc-header__nav">
+      <li><a class="dads-utility-link" href="#"><span class="dads-utility-link__label">お問い合わせ</span></a></li>
+    </ul>
+    -->
+  </div>
+</header>
+
+<!-- 任意: パンくず（文書が階層の中にあるときだけ。最後の項目は aria-current="page"）
+<div class="doc-container doc-breadcrumb">
+  <nav class="dads-breadcrumb" aria-labelledby="breadcrumb-label">
+    <span id="breadcrumb-label" class="dads-u-visually-hidden">現在位置</span>
+    <p class="dads-breadcrumb__list">
+      <span class="dads-breadcrumb__item">
+        <a class="dads-breadcrumb__link" href="#">ホーム</a>
+        <span class="dads-breadcrumb__separator">
+          <svg class="dads-breadcrumb__separator-icon" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4.5 11L4 10.5L8 6.5L4 2.5L4.5 2L9 6.5L4.5 11Z" fill="currentcolor"/></svg>
+        </span>
+      </span>
+      <span class="dads-breadcrumb__item" aria-current="page">{{文書タイトル}}</span>
+    </p>
+  </nav>
+</div>
+-->
+
+<main id="main" class="doc-main">
+  <div class="doc-container doc-layout">
+
+    <div class="doc-layout__title doc-title-block">
+      <div class="dads-heading" data-size="36">
+        <h1 class="dads-heading__heading">{{文書タイトル}}</h1>
+      </div>
+      <dl class="doc-meta">
+        <div><dt>公開日</dt><dd><time datetime="{{YYYY-MM-DD}}">{{YYYY年M月D日}}</time></dd></div>
+        <div><dt>最終更新日</dt><dd><time datetime="{{YYYY-MM-DD}}">{{YYYY年M月D日}}</time></dd></div>
+      </dl>
+      <p class="doc-lead">{{この文書で何が分かるかを 1〜3 文で}}</p>
+    </div>
+
+    <!-- 目次: h2 が 3 つ以上あるときに置く。不要ならこの aside ごと消す -->
+    <aside class="doc-layout__aside">
+      <nav class="dads-toc" aria-labelledby="toc-heading">
+        <h2 id="toc-heading" class="dads-toc__heading">このページの目次</h2>
+        <ul class="dads-list" data-spacing="8">
+          <li><a class="dads-link" href="#{{節1のid}}">{{節1の見出し}}</a></li>
+          <li><a class="dads-link" href="#{{節2のid}}">{{節2の見出し}}</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <article class="doc-layout__body doc-article doc-flow">
+
+      <section class="doc-section" aria-labelledby="{{節1のid}}">
+        <div class="dads-heading" data-size="28" data-rule="4">
+          <h2 id="{{節1のid}}" class="dads-heading__heading">{{節1の見出し}}</h2>
+        </div>
+        <p>{{本文}}</p>
+
+        <section class="doc-section" aria-labelledby="{{節1-1のid}}">
+          <div class="dads-heading" data-size="24">
+            <h3 id="{{節1-1のid}}" class="dads-heading__heading">{{節1-1の見出し}}</h3>
+          </div>
+          <p>{{本文}}</p>
+        </section>
+      </section>
+
+      <section class="doc-section" aria-labelledby="{{節2のid}}">
+        <div class="dads-heading" data-size="28" data-rule="4">
+          <h2 id="{{節2のid}}" class="dads-heading__heading">{{節2の見出し}}</h2>
+        </div>
+        <p>{{本文}}</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+
+<footer class="doc-footer">
+  <div class="doc-container">
+    <p>{{作成者・問い合わせ先・著作権表記など}}</p>
+  </div>
+</footer>
+
+</body>
+</html>

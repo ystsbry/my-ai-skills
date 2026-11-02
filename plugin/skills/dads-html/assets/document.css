@@ -1,0 +1,422 @@
+/*
+ * dads-html 文書レイアウト層
+ * DADS 公式コンポーネントではなく、このスキル独自のページ骨格・本文の流れ。
+ * 値はすべて DADS のトークン（global.css の変数）とテキストスタイルの数値から組む。
+ * 単位は公式実装に合わせて calc(px / 16 * 1rem)、罫線だけ px。
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-neutral-white);
+  color: var(--color-neutral-solid-gray-800);
+  font-family: var(--font-family-sans);
+  /* 本文 Std-16N-170 */
+  font-weight: normal;
+  font-size: calc(16 / 16 * 1rem);
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+  overflow-wrap: break-word;
+  line-break: strict;
+  /* 和文の擬似イタリックを作らせない（タイポグラフィ指針） */
+  font-synthesis-style: none;
+}
+
+img,
+svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ---------- スキップリンク ---------- */
+
+.doc-skip-link {
+  position: absolute;
+  top: calc(8 / 16 * 1rem);
+  left: calc(8 / 16 * 1rem);
+  z-index: 10;
+  transform: translateY(-200%);
+  background-color: var(--color-neutral-white);
+  padding: calc(8 / 16 * 1rem) calc(16 / 16 * 1rem);
+}
+
+.doc-skip-link:focus-visible {
+  transform: none;
+}
+
+/* ---------- ページ骨格 ---------- */
+
+.doc-container {
+  margin-inline: auto;
+  max-inline-size: calc(1200 / 16 * 1rem);
+  padding-inline: calc(16 / 16 * 1rem);
+}
+
+@media (min-width: 48rem) {
+  .doc-container {
+    padding-inline: calc(32 / 16 * 1rem);
+  }
+}
+
+.doc-header {
+  border-bottom: 1px solid var(--color-neutral-solid-gray-420);
+  padding-block: calc(16 / 16 * 1rem);
+}
+
+.doc-header__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(8 / 16 * 1rem) calc(24 / 16 * 1rem);
+}
+
+/* サイト名・組織名（Std-20B-150） */
+.doc-header__title {
+  margin: 0;
+  color: var(--color-neutral-solid-gray-900);
+  font-weight: bold;
+  font-size: calc(20 / 16 * 1rem);
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+}
+
+.doc-header__title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.doc-header__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(8 / 16 * 1rem) calc(24 / 16 * 1rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.doc-breadcrumb {
+  padding-block: calc(16 / 16 * 1rem) 0;
+}
+
+.doc-main {
+  padding-block: calc(40 / 16 * 1rem) calc(80 / 16 * 1rem);
+}
+
+/*
+ * 本文列 + 目次サイドバー
+ * DOM 順は「タイトル → 目次 → 本文」（見出し順を h1 → h2 に保つ）。
+ * 狭い画面は縦に積み、広い画面では目次を右カラムに固定する。
+ */
+.doc-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "title"
+    "aside"
+    "body";
+  gap: calc(40 / 16 * 1rem);
+}
+
+.doc-layout__title {
+  grid-area: title;
+}
+
+.doc-layout__aside {
+  grid-area: aside;
+}
+
+.doc-layout__body {
+  grid-area: body;
+}
+
+@media (min-width: 64rem) {
+  .doc-layout {
+    grid-template-columns: minmax(0, 1fr) calc(280 / 16 * 1rem);
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "title aside"
+      "body  aside";
+    column-gap: calc(64 / 16 * 1rem);
+  }
+
+  .doc-layout__aside > .dads-toc {
+    position: sticky;
+    top: calc(24 / 16 * 1rem);
+  }
+}
+
+/* 1 行の長さ: 16px 本文で全角 45 字前後に抑える */
+.doc-layout__title,
+.doc-article {
+  min-inline-size: 0;
+  max-inline-size: calc(736 / 16 * 1rem);
+}
+
+/* ---------- 文書の冒頭 ---------- */
+
+.doc-title-block > * + * {
+  margin-top: calc(16 / 16 * 1rem);
+}
+
+/* 公開日・更新日・作成者など（Std-16N-170, gray-600 = 白地で 5.7:1） */
+/* 余白の初期化は詳細度 0 にして、doc-flow / doc-section の間隔を優先させる */
+:where(.doc-meta) {
+  margin: 0;
+}
+
+.doc-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 calc(24 / 16 * 1rem);
+  color: var(--color-neutral-solid-gray-600);
+}
+
+.doc-meta > div {
+  display: flex;
+  gap: calc(8 / 16 * 1rem);
+}
+
+.doc-meta dt,
+.doc-meta dd {
+  margin: 0;
+}
+
+/* リード文（Std-18N-160） */
+/* 余白の初期化は詳細度 0 にして、doc-flow / doc-section の間隔を優先させる */
+:where(.doc-lead) {
+  margin: 0;
+}
+
+.doc-lead {
+  font-size: calc(18 / 16 * 1rem);
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- 本文の流れ ---------- */
+
+.doc-flow > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.doc-flow > * + * {
+  margin-top: calc(24 / 16 * 1rem);
+}
+
+/* 見出しレベルごとの区切り: h2 の節は大きく、h3 以下は中くらいに空ける */
+.doc-flow > * + .doc-section {
+  margin-top: calc(64 / 16 * 1rem);
+}
+
+.doc-section > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.doc-section > * + * {
+  margin-top: calc(24 / 16 * 1rem);
+}
+
+.doc-section > * + .doc-section {
+  margin-top: calc(40 / 16 * 1rem);
+}
+
+/* 連続するアコーディオンは間を空けずに積む（公式の stacked と同じ） */
+.doc-flow > .dads-accordion + .dads-accordion,
+.doc-section > .dads-accordion + .dads-accordion {
+  margin-top: 0;
+}
+
+/* 段落どうしは少し詰める */
+.doc-flow > p + p,
+.doc-section > p + p {
+  margin-top: calc(16 / 16 * 1rem);
+}
+
+/* 本文中の強調。em は和文で斜体にせず太字で示す */
+em {
+  font-style: normal;
+  font-weight: bold;
+}
+
+/* 検索・注目のハイライト: 同系色の淡い背景 + 濃い下線 */
+mark {
+  background-color: var(--color-primitive-cyan-100);
+  box-shadow: inset 0 calc(-2 / 16 * 1rem) 0 var(--color-primitive-cyan-900);
+  color: inherit;
+}
+
+/* ---------- コード（Mono） ---------- */
+
+code,
+kbd,
+samp {
+  font-family: var(--font-family-mono);
+  font-size: 0.95em;
+  letter-spacing: 0;
+}
+
+:not(pre) > code {
+  border: 1px solid var(--color-neutral-solid-gray-200);
+  border-radius: calc(4 / 16 * 1rem);
+  background-color: var(--color-neutral-solid-gray-50);
+  padding: 0 calc(4 / 16 * 1rem);
+}
+
+/* Mono-16N-150 */
+pre {
+  overflow-x: auto;
+  border: 1px solid var(--color-neutral-solid-gray-420);
+  border-radius: calc(8 / 16 * 1rem);
+  background-color: var(--color-neutral-solid-gray-50);
+  padding: calc(16 / 16 * 1rem) calc(20 / 16 * 1rem);
+  color: var(--color-neutral-solid-gray-900);
+  font-family: var(--font-family-mono);
+  font-size: calc(16 / 16 * 1rem);
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+pre code {
+  font-size: inherit;
+}
+
+/* ---------- 図・画像 ---------- */
+
+.doc-figure {
+  margin-inline: 0;
+}
+
+.doc-figure > figcaption {
+  margin-top: calc(8 / 16 * 1rem);
+  color: var(--color-neutral-solid-gray-600);
+}
+
+/* 横に長い表は横スクロール領域に入れる（tabindex="0" と aria-label を付ける） */
+.doc-scroll {
+  overflow-x: auto;
+  max-inline-size: 100%;
+}
+
+.doc-scroll > .dads-table {
+  min-inline-size: max-content;
+}
+
+/* 数値列は右寄せ・等幅数字 */
+.doc-num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 補足パネル（お知らせバナーほど強くない囲み） ---------- */
+
+.doc-panel {
+  border-radius: calc(12 / 16 * 1rem);
+  background-color: var(--color-neutral-solid-gray-50);
+  padding: calc(24 / 16 * 1rem);
+}
+
+.doc-panel > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.doc-panel > * + * {
+  margin-top: calc(16 / 16 * 1rem);
+}
+
+/* 小見出し（Std-17B-170）。パネルや一覧の中のラベル用。文書構造上の見出しには dads-heading を使う */
+/* 余白の初期化は詳細度 0 にして、doc-flow / doc-section の間隔を優先させる */
+:where(.doc-label) {
+  margin: 0;
+}
+
+.doc-label {
+  color: var(--color-neutral-solid-gray-900);
+  font-weight: bold;
+  font-size: calc(17 / 16 * 1rem);
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+}
+
+/* ボタンやチップを横に並べる */
+.doc-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(16 / 16 * 1rem);
+}
+
+/* リソースリストを縦に並べる */
+/* 余白の初期化は詳細度 0 にして、doc-flow / doc-section の間隔を優先させる */
+:where(.doc-resource-items) {
+  margin: 0;
+}
+
+.doc-resource-items {
+  display: grid;
+  row-gap: calc(16 / 16 * 1rem);
+  padding-left: 0;
+  list-style-type: none;
+}
+
+/* 補足の文。サイズは本文のまま、色だけ gray-600 */
+.doc-note {
+  color: var(--color-neutral-solid-gray-600);
+}
+
+/* ---------- フッター ---------- */
+
+.doc-footer {
+  border-top: 1px solid var(--color-neutral-solid-gray-420);
+  background-color: var(--color-neutral-solid-gray-50);
+  padding-block: calc(32 / 16 * 1rem);
+  color: var(--color-neutral-solid-gray-800);
+  /* Dns-14N-130: 付随情報なので 14px を許容 */
+  font-size: calc(14 / 16 * 1rem);
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+
+.doc-footer p {
+  margin: 0;
+}
+
+.doc-footer > .doc-container > * + * {
+  margin-top: calc(16 / 16 * 1rem);
+}
+
+/* ---------- 印刷 ---------- */
+
+@media print {
+  .doc-skip-link,
+  .doc-layout__aside {
+    display: none;
+  }
+
+  .doc-layout {
+    display: block;
+  }
+
+  .doc-layout__title,
+  .doc-article {
+    max-inline-size: none;
+  }
+
+  .doc-scroll {
+    overflow: visible;
+  }
+
+  .dads-table,
+  .doc-figure,
+  pre {
+    break-inside: avoid;
+  }
+}
